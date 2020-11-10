@@ -97,6 +97,30 @@ This provides the following benefits:
 - Provides a replacement for fields that allows you to observe reading and writing the value of the field with decorators.
 - Allows you to perform initialization inline with the declaration, similar to fields.
 
+# Interaction With Class `static {}` Initialization Block 
+
+The [Class `static {}` Initialization Block](https://github.com/tc39/proposal-class-static-block) proposal also uses a syntax 
+that overlaps with this proposal, namely whether `static {` should be parsed as an accessor block or a static initialization 
+block. However, this is similar to the ambiguity between _ConstructorDeclaration_ and _MethodDeclaration_ and the handling of the
+`constructor` identifier. 
+
+For `constructor`, the following semantics apply:
+
+- `constructor (` is unambiguously the start of a _class constructor_.
+- `"constructor (` is unambiguously the start of a _class constructor_.
+- `["constructor"] (` is unambiguously the start of a _prototype method_ named `constructor`.
+- `static constructor (` is unambiguously a _static method_ named `constructor`.
+- `static "constructor" (` is unambiguously a _static method_ named `constructor`.
+- `static ["constructor"] (` is unambiguously a _static method_ named `constructor`.
+
+For `static` initialization blocks, the same semantics will apply:
+
+- `static {` is unambiguously the start of a _static initialization block_.
+- `"static" {` is unambiguously the start of a _static initialization block_ (and the proposal will be updated as such).
+- `["static"] {` is unambiguously the start of a _prototype accessor group_.
+- `static static {` is unambiguously the start of a _static accessor group_.
+- `static "static" {` is unambiguously the start of a _static accessor group_ (and the proposal will be updated as such).
+- `static ["static"] {` is unambiguously the start of a _static accessor group_.
 
 ## Prior Art
 - C# ([1](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/using-properties), [2](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/auto-implemented-properties))
