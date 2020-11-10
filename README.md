@@ -119,7 +119,7 @@ For `static` initialization blocks, the same semantics will apply:
 - `"static" {` is unambiguously the start of a _static initialization block_ (and the proposal will be updated as such).
 - `["static"] {` is unambiguously the start of a _prototype accessor group_.
 - `static static {` is unambiguously the start of a _static accessor group_.
-- `static "static" {` is unambiguously the start of a _static accessor group_ (and the proposal will be updated as such).
+- `static "static" {` is unambiguously the start of a _static accessor group_.
 - `static ["static"] {` is unambiguously the start of a _static accessor group_.
 
 ## Prior Art
