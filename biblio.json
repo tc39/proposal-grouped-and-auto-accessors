@@ -1,0 +1,30 @@
+{
+    "location": "https://arai-a.github.io/ecma262-compare/?pr=2417",
+    "entries": [
+        {
+            "type": "op",
+            "aoid": "ApplyDecoratorsToElementDefinition",
+            "refId": "sec-applydecoratorstoelementdefinition"
+        },
+        {
+            "type": "op",
+            "aoid": "CreateFieldInitializerFunction",
+            "refId": "sec-createfieldinitializerfunction"
+        },
+        {
+            "type": "op",
+            "aoid": "DefineMethodProperty",
+            "refId": "sec-definemethodproperty"
+        },
+        {
+            "type": "op",
+            "aoid": "MakeAutoAccessorGetter",
+            "refId": "sec-makeautoaccessorgetter"
+        },
+        {
+            "type": "op",
+            "aoid": "MakeAutoAccessorSetter",
+            "refId": "sec-makeautoaccessorsetter"
+        }
+    ]
+}

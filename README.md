@@ -58,7 +58,7 @@ single logical group. This provides the following benefits:
   ```js
   class C {
     accessor y {
-      get() { ... } 
+      get() { ... }
       #set(value) { ... }
     }
   }
@@ -78,6 +78,8 @@ single logical group. This provides the following benefits:
     }
   }
   ```
+  - This allows you to reuse a decorator designed for an `accessor` field with a paired `get` and `set` declaration.
+  - This also provides a capability that was present in the Stage 1 Decorators proposal that is currently missing in the Stage 3 Decorators proposal.
 
 ## Auto-Accessors
 
@@ -110,9 +112,9 @@ class C {
 }
 ```
 
-An _auto-accessor_ is a simplified version of a _grouped accessor_ that allows you to elide the body of the `get` 
+An _auto-accessor_ is a simplified version of a _grouped accessor_ that allows you to elide the body of the `get`
 and `set` methods, and optionally provide an initializer. An _auto-accessor_ introduces a unique *unnamed* private field on 
-the class which is wrapped by a generated getter and an optional generated setter. Using `#set` instead of `set` indicates that a 
+the class which is wrapped by a generated getter and an optional generated setter. Using `#set` instead of `set` indicates that a
 private setter of the same name as the public member (but prefixed with `#`) exists on the object and provides privileged access to set the 
 underlying value.
 
@@ -120,6 +122,13 @@ This provides the following benefits:
 - Introduces accessors that can be overridden in subclasses without excess boilerplate.
 - Provides a replacement for fields that allows you to observe reading and writing the value of the field with decorators.
 - Allows you to perform initialization inline with the declaration, similar to fields.
+- Allows you to decorate the individual `get` or `set` method stubs independently of the entire accessor. For example:
+  ```js
+  class C {
+    accessor x { @dec get; set; }
+  }
+  ```
+  - This allows you to reuse a decorator designed only for a `get` or a `set` method in the context of an `accessor` field definition.
 
 ## Proposed Syntax
 
@@ -369,11 +378,6 @@ PrivateSetAccessorMethod : `#set` `(` PropertySetParameterList `)` `{` FunctionB
 2. Return the result of defining a setter method on _object_ named _name_ with parameters _PropertySetParameterList_ and
     whose body is _FunctionBody_ (steps TBD).
 
-# Interaction With Class `static {}` Initialization Block 
-
-The initial proposal for this feature did not use the `accessor` keyword prefix to distinguish a grouped- or auto-accessor,
-which lead to a collision with the [Class `static {}` Initialization Block proposal](https://github.com/tc39/proposal-class-static-block).
-The current version now requires the `accessor` keyword and no longer conflicts with `static {}`.
 
 # Interaction with Decorators
 
@@ -536,7 +540,7 @@ The following is a high-level list of tasks to progress through each stage of th
 
 ### Stage 2 Entrance Criteria
 
-* [ ] [Initial specification text][Specification].  
+* [x] [Initial specification text][Specification].  
 * [ ] [Transpiler support][Transpiler] (_Optional_).  
 
 ### Stage 3 Entrance Criteria

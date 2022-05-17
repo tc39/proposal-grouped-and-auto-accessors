@@ -4,20 +4,1187 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css">
 <script src="./spec.js"></script>
 <pre class="metadata">
-title: Proposal Title Goes Here
-stage: -1
-contributors: Your Name(s) Here
+title: Grouped Accessors and Auto Accessors
+stage: 1
+contributors: Ron Buckton, Ecma International
 </pre>
 
-<emu-clause id="sec-demo-clause">
-  <h1>This is an emu-clause</h1>
-  <p>This is an algorithm:</p>
-  <emu-alg>
-    1. Let _proposal_ be *undefined*.
-    1. If IsAccepted(_proposal_),
-      1. Let _stage_ be *0*.
-    1. Else,
-      1. Let _stage_ be *-1*.
-    1. Return ? ToString(_proposal_).
-  </emu-alg>
+<emu-biblio href="node_modules/@tc39/ecma262-biblio/biblio.json"></emu-biblio>
+<emu-biblio href="biblio.json"></emu-biblio>
+
+<emu-intro id="sec-intro">
+  <h1>Introduction</h1>
+  <p>This proposal defines additional syntax for `accessor` properties in classes.</p>
+  <p>See <a href="https://github.com/tc39/proposal-grouped-and-auto-accessors">the proposal repository</a> for background material and discussion.</p>
+</emu-intro>
+
+<emu-clause id="sec-ecmascript-data-types-and-values" aoid="Type">
+  <h1>ECMAScript Data Types and Values</h1>
+
+  <emu-clause id="sec-ecmascript-specification-types">
+    <h1>ECMAScript Specification Types</h1>
+
+    <emu-clause id="sec-classelementdefinition-record-specification-type" oldids="sec-classfielddefinition-record-specification-type">
+      <h1>The ClassElementDefinition Record Specification Type</h1>
+      <p>The ClassElementDefinition type is a Record used in the specification of private and public, static and non-static class fields, methods, and accessors.</p>
+      <p>Values of the ClassElementDefinition type are Record values whose fields are defined by <emu-xref href="#table-classelementdefinition-fields"></emu-xref>. Such values are referred to as <dfn variants="ClassElementDefinition Record">ClassElementDefinition Records</dfn>.</p>
+      <emu-table id="table-classelementdefinition-fields" caption="ClassElementDefinition Record Fields" oldids="table-classfielddefinition-fields">
+        <table>
+          <tr>
+            <th>
+              Field Name
+            </th>
+            <th>
+              Values of the [[Kind]] field for which it is present
+            </th>
+            <th>
+              Value
+            </th>
+            <th>
+              Meaning
+            </th>
+          </tr>
+          <tr>
+            <td>
+              [[Key]]
+            </td>
+            <td>
+              ~field~, ~method~, ~accessor~, ~getter~, ~setter~
+            </td>
+            <td>
+              a Private Name, a String, or a Symbol
+            </td>
+            <td>
+              The name of the field.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              [[Kind]]
+            </td>
+            <td>
+              ~field~, ~method~, ~accessor~, ~getter~, or ~setter~
+            </td>
+            <td>
+              ~field~, ~method~, ~accessor~, ~getter~, or ~setter~
+            </td>
+            <td>
+              The kind of the element.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              [[Value]]
+            </td>
+            <td>
+              ~method~
+            </td>
+            <td>
+              a function object
+            </td>
+            <td>
+              The function for a method definition.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              [[Get]]
+            </td>
+            <td>
+              ~accessor~ and ~getter~
+            </td>
+            <td>
+              a function object <ins>or *undefined*</ins>
+            </td>
+            <td>
+              The getter for an accessor definition.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              [[Set]]
+            </td>
+            <td>
+              ~accessor~ and ~setter~
+            </td>
+            <td>
+              a function object <ins>or *undefined*</ins>
+            </td>
+            <td>
+              The setter for an accessor definition.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              [[BackingStorageKey]]
+            </td>
+            <td>
+              ~accessor~
+            </td>
+            <td>
+              a Private Name <ins>or ~empty~</ins>
+            </td>
+            <td>
+              A private name for the backing state behind accessors defined with the `accessor` keyword
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <ins>[[PrivateSetKey]]</ins>
+            </td>
+            <td>
+              <ins>~accessor~</ins>
+            </td>
+            <td>
+              <ins>a Private Name or ~empty~</ins>
+            </td>
+            <td>
+              <ins>A private name for the private setter in an accessor group</ins>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              [[Decorators]]
+            </td>
+            <td>
+              ~field~, ~method~, ~accessor~, ~getter~, ~setter~
+            </td>
+            <td>
+              a List of function objects or ~empty~
+            </td>
+            <td>
+              The decorators applied to the class element, if any.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <ins>[[GetDecorators]]</ins>
+            </td>
+            <td>
+              <ins>~accessor~</ins>
+            </td>
+            <td>
+              <ins>a List of function objects or ~empty~</ins>
+            </td>
+            <td>
+              <ins>The decorators applied only to the getter of a grouped accessor, if any.</ins>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <ins>[[SetDecorators]]</ins>
+            </td>
+            <td>
+              <ins>~accessor~</ins>
+            </td>
+            <td>
+              <ins>a List of function objects or ~empty~</ins>
+            </td>
+            <td>
+              <ins>The decorators applied only to the setter of a grouped accessor, if any.</ins>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              [[Initializers]]
+            </td>
+            <td>
+              ~field~ and ~accessor~
+            </td>
+            <td>
+              a List of function objects
+            </td>
+            <td>
+              The initializers of the field or accessor, if any.
+            </td>
+          </tr>
+        </table>
+      </emu-table>
+    </emu-clause>
+  </emu-clause>
+</emu-clause>
+
+<emu-clause id="sec-ecmascript-language-expressions">
+  <h1>ECMAScript Language: Expressions</h1>
+
+  <emu-clause id="sec-primary-expression">
+    <h1>Primary Expression</h1>
+
+    <emu-clause id="sec-object-initializer">
+      <h1>Object Initializer</h1>
+      <emu-note>
+        <p>An object initializer is an expression describing the initialization of an Object, written in a form resembling a literal. It is a list of zero or more pairs of property keys and associated values, enclosed in curly brackets. The values need not be literals; they are evaluated each time the object initializer is evaluated.</p>
+      </emu-note>
+      <h2>Syntax</h2>
+      <emu-grammar type="definition">
+        ObjectLiteral[Yield, Await] :
+          `{` `}`
+          `{` PropertyDefinitionList[?Yield, ?Await] `}`
+          `{` PropertyDefinitionList[?Yield, ?Await] `,` `}`
+
+        PropertyDefinitionList[Yield, Await] :
+          PropertyDefinition[?Yield, ?Await]
+          PropertyDefinitionList[?Yield, ?Await] `,` PropertyDefinition[?Yield, ?Await]
+
+        PropertyDefinition[Yield, Await] :
+          IdentifierReference[?Yield, ?Await]
+          CoverInitializedName[?Yield, ?Await]
+          PropertyName[?Yield, ?Await] `:` AssignmentExpression[+In, ?Yield, ?Await]
+          MethodDefinition[?Yield, ?Await]
+          <ins>AccessorGroupDefinition[?Yield, ?Await]</ins>
+          `...` AssignmentExpression[+In, ?Yield, ?Await]
+
+        PropertyName[Yield, Await] :
+          LiteralPropertyName
+          ComputedPropertyName[?Yield, ?Await]
+
+        LiteralPropertyName :
+          IdentifierName
+          StringLiteral
+          NumericLiteral
+
+        ComputedPropertyName[Yield, Await] :
+          `[` AssignmentExpression[+In, ?Yield, ?Await] `]`
+
+        CoverInitializedName[Yield, Await] :
+          IdentifierReference[?Yield, ?Await] Initializer[+In, ?Yield, ?Await]
+
+        Initializer[In, Yield, Await] :
+          `=` AssignmentExpression[?In, ?Yield, ?Await]
+
+        <ins class="block">
+        AccessorGroupDefinition[Yield, Await] :
+          `accessor` PropertyName[?Yield, ?Await] AccessorGroup[?Yield, ?Await, ~Class]
+        </ins>
+      </emu-grammar>
+      <emu-note>
+        <p>|MethodDefinition| is defined in <emu-xref href="#sec-method-definitions"></emu-xref>.</p>
+      </emu-note>
+      <emu-note>
+        <p>In certain contexts, |ObjectLiteral| is used as a cover grammar for a more restricted secondary grammar. The |CoverInitializedName| production is necessary to fully cover these secondary grammars. However, use of this production results in an early Syntax Error in normal contexts where an actual |ObjectLiteral| is expected.</p>
+      </emu-note>
+
+      <emu-clause id="sec-runtime-semantics-propertydefinitionevaluation" oldids="sec-object-initializer-runtime-semantics-propertydefinitionevaluation" type="sdo">
+        <h1>
+          Runtime Semantics: PropertyDefinitionEvaluation (
+            _object_: unknown,
+          )
+        </h1>
+        <dl class="header">
+        </dl>
+        <emu-grammar>PropertyDefinitionList : PropertyDefinitionList `,` PropertyDefinition</emu-grammar>
+        <emu-alg>
+          1. Perform ? PropertyDefinitionEvaluation of |PropertyDefinitionList| with argument _object_.
+          1. Perform ? PropertyDefinitionEvaluation of |PropertyDefinition| with argument _object_.
+          1. Return ~unused~.
+        </emu-alg>
+        <emu-grammar>PropertyDefinition : `...` AssignmentExpression</emu-grammar>
+        <emu-alg>
+          1. Let _exprValue_ be the result of evaluating |AssignmentExpression|.
+          1. Let _fromValue_ be ? GetValue(_exprValue_).
+          1. Let _excludedNames_ be a new empty List.
+          1. Perform ? CopyDataProperties(_object_, _fromValue_, _excludedNames_).
+          1. Return ~unused~.
+        </emu-alg>
+        <emu-grammar>PropertyDefinition : IdentifierReference</emu-grammar>
+        <emu-alg>
+          1. Let _propName_ be StringValue of |IdentifierReference|.
+          1. Let _exprValue_ be the result of evaluating |IdentifierReference|.
+          1. Let _propValue_ be ? GetValue(_exprValue_).
+          1. Assert: _object_ is an ordinary, extensible object with no non-configurable properties.
+          1. Perform ! CreateDataPropertyOrThrow(_object_, _propName_, _propValue_).
+          1. Return ~unused~.
+        </emu-alg>
+        <emu-grammar>PropertyDefinition : PropertyName `:` AssignmentExpression</emu-grammar>
+        <emu-alg>
+          1. Let _propKey_ be the result of evaluating |PropertyName|.
+          1. ReturnIfAbrupt(_propKey_).
+          1. If this |PropertyDefinition| is contained within a |Script| that is being evaluated for JSON.parse (see step <emu-xref href="#step-json-parse-eval"></emu-xref> of <emu-xref href="#sec-json.parse">JSON.parse</emu-xref>), then
+            1. Let _isProtoSetter_ be *false*.
+          1. Else if _propKey_ is the String value *"__proto__"* and if IsComputedPropertyKey of |PropertyName| is *false*, then
+            1. Let _isProtoSetter_ be *true*.
+          1. Else,
+            1. Let _isProtoSetter_ be *false*.
+          1. If IsAnonymousFunctionDefinition(|AssignmentExpression|) is *true* and _isProtoSetter_ is *false*, then
+            1. Let _propValue_ be ? NamedEvaluation of |AssignmentExpression| with argument _propKey_.
+          1. Else,
+            1. Let _exprValueRef_ be the result of evaluating |AssignmentExpression|.
+            1. Let _propValue_ be ? GetValue(_exprValueRef_).
+          1. If _isProtoSetter_ is *true*, then
+            1. If Type(_propValue_) is either Object or Null, then
+              1. Return ! <emu-meta effects="user-code">_object_.[[SetPrototypeOf]]</emu-meta>(_propValue_).
+            1. Return NormalCompletion(~empty~).
+          1. Assert: _object_ is an ordinary, extensible object with no non-configurable properties.
+          1. Perform ! CreateDataPropertyOrThrow(_object_, _propKey_, _propValue_).
+          1. Return ~unused~.
+        </emu-alg>
+        <emu-grammar>PropertyDefinition : MethodDefinition</emu-grammar>
+        <emu-alg>
+          1. Let _methodDefinition_ be ? MethodDefinitionEvaluation of |MethodDefinition| with argument _object_.
+          1. Perform ? DefineMethodProperty(_object_, _methodDefinition_, *true*).
+          1. Return ~unused~.
+        </emu-alg>
+        <ins class="block">
+        <emu-grammar>AccessorGroupDefinition : `accessor` PropertyName AccessorGroup</emu-grammar>
+        <emu-alg>
+          1. Let _propKey_ be the result of evaluating |PropertyName|.
+          1. ReturnIfAbrupt(_propKey_).
+          1. Let _accessorGroup_ be the ClassElementDefinition Record { [[Key]]: _popKey_, [[Kind]]: ~accessor~, [[Get]]: *undefined*, [[Set]]: *undefined*, [[BackingStorageKey]]: ~empty~, [[PrivateSetKey]]: _setterPrivateName_, [[Initializers]]: a new empty List, [[Decorators]] ~empty~, [[GetDecorators]]: ~empty~, [[SetDecorators]]: ~empty~ }.
+          1. Set _accessorGroup_ to ? AccessorGroupEvaluation of |AccessorGroup| with arguments _object_ and _accessorGroup_.
+          1. Perform ? DefineMethodProperty(_object_, _accessorGroup_, *true*).
+          1. Return ~unused~.
+        </emu-alg>
+        </ins>
+      </emu-clause>
+
+    </emu-clause>
+  </emu-clause>
+</emu-clause>
+
+
+<emu-clause id="sec-ecmascript-language-functions-and-classes">
+  <h1>ECMAScript Language: Functions and Classes</h1>
+
+  <emu-clause id="sec-class-definitions-static-semantics-methoddecorators">
+    <h1>Static Semantics: Method Decorators</h1>
+
+    <emu-clause id="sec-applydecoratorsanddefinemethod" type="abstract operation">
+      <h1>
+        ApplyDecoratorsAndDefineMethod (
+          _homeObject_: an Object,
+          _methodDefinition_: a ClassElementDefinition Record,
+          _extraInitializers_: a List of function objects,
+          _isStatic_: a Boolean,
+        ): either a normal completion containing ~unused~, or an abrupt completion
+      </h1>
+      <dl class="header">
+      </dl>
+      <emu-alg>
+        1. <ins>If _methodDefinition_.[[Kind]] is ~accessor~, then</ins>
+          1. <ins>If _methodDefinition_.[[GetDecorators]] is a List, then</ins>
+            1. <ins>Let _getterName_ be _methodDefinition_.[[Key]].</ins>
+            1. <ins>Let _getter_ be _methodDefinition_.[[Get]].</ins>
+            1. <ins>Let _getDecorators_ be _methodDefinition_.[[GetDecorators]].</ins>
+            1. <ins>Let _getterDefinition_ be the ClassElementDefinition Record { [[Key]]: _getterName_, [[Kind]]: ~getter~, [[Get]]: _getter_, [[Decorators]]: _getDecorators_ }.</ins>
+            1. <ins>Perform ? ApplyDecoratorsToElementDefinition(_homeObject_, _getterDefinition_, _extraInitializers_, _isStatic_).</ins>
+            1. <ins>Set _methodDefinition_.[[Get]] to _getterDefinition_.[[Get]].</ins>
+            1. <ins>Set _methodDefinition_.[[GetDecorators]] to ~empty~.</ins>
+          1. <ins>If _methodDefinition_.[[SetDecorators]] is a List, then</ins>
+            1. <ins>If _methodDefinition_.[[PrivateSetKey]] is a Private Name, then</ins>
+              1. <ins>Let _setterName_ be _methodDefinition_.[[PrivateSetKey]].</ins>
+            1. <ins>Else,</ins>
+              1. <ins>Let _setterName_ be _methodDefinition_.[[Key]].</ins>
+            1. <ins>Let _setter_ be _methodDefinition_.[[Set]].</ins>
+            1. <ins>Let _setterDefinition_ be the ClassElementDefinition Record { [[Key]]: _setterName_, [[Kind]]: ~setter~, [[Set]]: _setter_, [[Decorators]]: _setDecorators_ }.</ins>
+            1. <ins>Perform ? ApplyDecoratorsToElementDefinition(_homeObject_, _setterDefinition_, _extraInitializers_, _isStatic_).</ins>
+            1. <ins>Set _methodDefinition_.[[Set]] to _setterDefinition_.[[Set]].</ins>
+            1. <ins>Set _methodDefinition_.[[SetDecorators]] to ~empty~.</ins>
+        1. Perform ? ApplyDecoratorsToElementDefinition(_homeObject_, _methodDefinition_, _extraInitializers_, _isStatic_).
+        1. Perform ? DefineMethodProperty(_homeObject_, _methodDefinition_, _isStatic_).
+        1. Return ~unused~.
+      </emu-alg>
+    </emu-clause>
+
+  </emu-clause>
+
+  <emu-clause id="sec-class-definitions">
+    <h1>Class Definitions</h1>
+    <h2>Syntax</h2>
+    <emu-grammar type="definition">
+      ClassDeclaration[Yield, Await, Default] :
+        DecoratorList[?Yield, ?Await]? `class` BindingIdentifier[?Yield, ?Await] ClassTail[?Yield, ?Await]
+        [+Default] DecoratorList[?Yield, ?Await]? `class` ClassTail[?Yield, ?Await]
+
+      ClassExpression[Yield, Await] :
+        DecoratorList[?Yield, ?Await]? `class` BindingIdentifier[?Yield, ?Await]? ClassTail[?Yield, ?Await]
+
+      ClassTail[Yield, Await] :
+        ClassHeritage[?Yield, ?Await]? `{` ClassBody[?Yield, ?Await]? `}`
+
+      ClassHeritage[Yield, Await] :
+        `extends` LeftHandSideExpression[?Yield, ?Await]
+
+      ClassBody[Yield, Await] :
+        ClassElementList[?Yield, ?Await]
+
+      ClassElementList[Yield, Await] :
+        ClassElement[?Yield, ?Await]
+        ClassElementList[?Yield, ?Await] ClassElement[?Yield, ?Await]
+
+      ClassElement[Yield, Await] :
+        DecoratorList[?Yield, ?Await]? MethodDefinition[?Yield, ?Await]
+        DecoratorList[?Yield, ?Await]? `static` MethodDefinition[?Yield, ?Await]
+        <del class="block">
+        DecoratorList[?Yield, ?Await]? FieldDefinition[?Yield, ?Await] `;`
+        DecoratorList[?Yield, ?Await]? `static` FieldDefinition[?Yield, ?Await] `;`
+        </del>
+        <ins class="block">
+        DecoratorList[?Yield, ?Await]? FieldDefinition[?Yield, ?Await]
+        DecoratorList[?Yield, ?Await]? `static` FieldDefinition[?Yield, ?Await]
+        </ins>
+        ClassStaticBlock
+        `;`
+
+      FieldDefinition[Yield, Await] :
+        <del class="block">
+        ClassElementName[?Yield, ?Await] Initializer[+In, ?Yield, ?Await]?
+        `accessor` [no LineTerminator here] ClassElementName[?Yield, ?Await] Initializer[+In, ?Yield, ?Await]?
+        </del>
+        <ins class="block">
+        ClassElementName[?Yield, ?Await] Initializer[+In, ?Yield, ?Await]? `;`
+        `accessor` [no LineTerminator here] ClassElementName[?Yield, ?Await] Initializer[+In, ?Yield, ?Await]? `;`
+        `accessor` [no LineTerminator here] ClassElementName[?Yield, ?Await] AccessorGroup[?Yield, ?Await] Initializer[+In, ?Yield, ?Await] `;`
+        `accessor` [no LineTerminator here] ClassElementName[?Yield, ?Await] AccessorGroup[?Yield, ?Await]
+        </ins>
+
+      ClassElementName[Yield, Await] :
+        PropertyName[?Yield, ?Await]
+        PrivateIdentifier
+
+      <ins class="block">
+      AccessorGroup[Yield, Await, Class] :
+        [+Class] `{` `}`
+        `{` AccessorGroupElement[?Yield, ?Await, ?Class] AccessorGroupElement[?Yield, ?Await, ?Class]? `}`
+
+      AccessorGroupElement[Yield, Await, Class] :
+        [+Class] DecoratorList[?Yield, ?Await] AccessorGroupGetMethodDefinition
+        [+Class] DecoratorList[?Yield, ?Await] AccessorGroupSetMethodDefinition
+        [+Class] DecoratorList[?Yield, ?Await]? AccessorGroupPrivateSetMethodDefinition
+        [+Class] DecoratorList[?Yield, ?Await]? AccessorGroupGetMethodStub
+        [+Class] DecoratorList[?Yield, ?Await]? AccessorGroupSetMethodStub
+        [+Class] DecoratorList[?Yield, ?Await]? AccessorGroupPrivateSetMethodStub
+        AccessorGroupGetMethodDefinition
+        AccessorGroupSetMethodDefinition
+
+      AccessorGroupGetMethodDefinition :
+        `get` `(` `)` `{` FunctionBody[~Yield, ~Await] `}`
+
+      AccessorGroupSetMethodDefinition :
+        `set` `(` PropertySetParameterList `)` `{` FunctionBody[~Yield, ~Await] `}`
+
+      AccessorGroupPrivateSetMethodDefinition :
+        `#set` `(` PropertySetParameterList `)` `{` FunctionBody[~Yield, ~Await] `}`
+
+      AccessorGroupGetMethodStub :
+        `get` `;`
+
+      AccessorGroupSetMethodStub :
+        `set` `;`
+
+      AccessorGroupPrivateSetMethodStub :
+        `#set` `;`
+      </ins>
+
+      ClassStaticBlock :
+        `static` `{` ClassStaticBlockBody `}`
+
+      ClassStaticBlockBody :
+        ClassStaticBlockStatementList
+
+      ClassStaticBlockStatementList :
+        StatementList[~Yield, +Await, ~Return]?
+    </emu-grammar>
+    <emu-note>
+      <p>A class definition is always strict mode code.</p>
+    </emu-note>
+
+    <emu-clause id="sec-class-definitions-static-semantics-early-errors">
+      <h1>Static Semantics: Early Errors</h1>
+
+      <ins class="block">
+      <emu-grammar>
+        FieldDefinition :
+          `accessor` ClassElementName AccessorGroup Initializer `;`
+      </emu-grammar>
+      <ul>
+        <li>It is a Syntax Error if ContainsNonIdentifierName of |ClassElementName| is *true* and ContainsAccessorGroupPrivateMethod of |AccessorGroup|  is *true*.</li>
+        <li>It is a Syntax Error if ContainsAccessorGroupMethodDefinition of |AccessorGroup| *true*.</li>
+        <li>It is a Syntax Error if ContainsArguments of |Initializer| is *true*.</li>
+        <li>It is a Syntax Error if |Initializer| Contains |SuperCall| is *true*.</li>
+      </ul>
+
+      <emu-grammar>
+        FieldDefinition :
+          `accessor` ClassElementName AccessorGroup
+      </emu-grammar>
+      <ul>
+        <li>It is a Syntax Error if ContainsNonIdentifierName of |ClassElementName| is *true* and ContainsAccessorGroupPrivateMethod of |AccessorGroup| is *true*.</li>
+      </ul>
+
+      <emu-grammar>
+        AccessorGroup :
+          `{` AccessorGroupElement AccessorGroupElement `}`
+      </emu-grammar>
+      <ul>
+        <li>It is a Syntax Error if ContainsAccessorGroupGetMethod of the first |AccessorGroupElement| is *true* and ContainsAccessorGroupGetMethod of the second |AccessorGroupElement| is *true*.</li>
+        <li>It is a Syntax Error if ContainsAccessorGroupSetMethod of the first |AccessorGroupElement| is *true* and ContainsAccessorGroupSetMethod of the second |AccessorGroupElement| is *true*.</li>
+        <li>It is a Syntax Error if ContainsAccessorGroupMethodDefinition of the first |AccessorGroupElement| is *true* and ContainsAccessorGroupMethodStub of the second |AccessorGroupElement| is *true*.</li>
+        <li>It is a Syntax Error if ContainsAccessorGroupMethodStub of the first |AccessorGroupElement| is *true* and ContainsAccessorGroupMethodDefinition of the second |AccessorGroupElement| is *true*.</li>
+      </ul>
+      </ins>
+    </emu-clause>
+
+    <emu-clause id="sec-static-semantics-privateboundidentifiers" type="sdo">
+      <h1>Static Semantics: PrivateBoundIdentifiers</h1>
+      <dl class="header">
+      </dl>
+      <emu-grammar>
+        FieldDefinition : ClassElementName Initializer?
+      </emu-grammar>
+      <emu-alg>
+        1. Return PrivateBoundIdentifiers of |ClassElementName|.
+      </emu-alg>
+
+      <ins class="block">
+      <emu-grammar>
+        FieldDefinition :
+          ClassElementName AccessorGroup Initializer `;`
+          ClassElementName AccessorGroup
+      </emu-grammar>
+      <emu-alg>
+        1. If ContainsAccessorGroupPrivateMethod of |AccessorGroup| is *true*, then
+          1. Let _name_ be PropName of |ClassElementName|.
+          1. Assert: Type(_name_) is String.
+          1. Let _privateIdentifier_ to be the string-concatenation of 0x0023 (NUMBER SIGN) and _name_.
+          1. Return a List whose sole element is _privateIdentifier_.
+        1. Else,
+          1. Return PrivateBoundIdentifiers of |ClassElementName|.
+      </emu-alg>
+      </ins>
+
+      <emu-grammar>
+        ClassElement :
+          DecoratorList? MethodDefinition
+          DecoratorList? `static` MethodDefinition
+      </emu-grammar>
+      <emu-alg>
+        1. Return PrivateBoundIdentifiers of |MethodDefinition|.
+      </emu-alg>
+
+      <emu-grammar>
+        ClassElement :
+          DecoratorList? FieldDefinition
+          DecoratorList? `static` FieldDefinition
+      </emu-grammar>
+      <emu-alg>
+        1. Return PrivateBoundIdentifiers of |FieldDefinition|.
+      </emu-alg>
+
+      <emu-grammar>
+        ClassElementName : PrivateIdentifier
+      </emu-grammar>
+      <emu-alg>
+        1. Return a List whose sole element is the StringValue of |PrivateIdentifier|.
+      </emu-alg>
+
+      <emu-grammar>
+        ClassElementName :
+          PropertyName
+
+        ClassElement :
+          ClassStaticBlock
+          `;`
+      </emu-grammar>
+      <emu-alg>
+        1. Return a new empty List.
+      </emu-alg>
+
+      <emu-grammar>
+        ClassElementList : ClassElementList ClassElement
+      </emu-grammar>
+      <emu-alg>
+        1. Let _names1_ be PrivateBoundIdentifiers of |ClassElementList|.
+        1. Let _names2_ be PrivateBoundIdentifiers of |ClassElement|.
+        1. Return the list-concatenation of _names1_ and _names2_.
+      </emu-alg>
+
+      <emu-grammar>
+        MethodDefinition :
+          ClassElementName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
+          `get` ClassElementName `(` `)` `{` FunctionBody `}`
+          `set` ClassElementName `(` PropertySetParameterList `)` `{` FunctionBody `}`
+
+        GeneratorMethod :
+          `*` ClassElementName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
+
+        AsyncMethod :
+          `async` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncFunctionBody `}`
+
+        AsyncGeneratorMethod :
+          `async` `*` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Return PrivateBoundIdentifiers of |ClassElementName|.
+      </emu-alg>
+    </emu-clause>
+
+    <ins class="block">
+    <emu-clause id="sec-static-semantics-containsnonidentifiername" type="sdo">
+      <h1>Static Semantics: ContainsNonIdentifierName</h1>
+      <dl class="header">
+      </dl>
+      <emu-grammar>
+        ClassElementName : PrivateIdentifier
+        PropertyName : ComputedPropertyName
+        LiteralPropertyName : StringLiteral
+        LiteralPropertyName : NumericLiteral
+      </emu-grammar>
+      <emu-alg>
+        1. Return *true*.
+      </emu-alg>
+      <emu-grammar>
+        LiteralPropertyName: IdentifierName
+      </emu-grammar>
+      <emu-alg>
+        1. Return *false*.
+      </emu-alg>
+      <emu-note>
+        DRAFT NOTE: Used to verify an |AccessorGroup| containing `#set` is only used with a |ClassElementName| that is an |IdentifierName|.
+      </emu-note>
+    </emu-clause>
+
+    <emu-clause id="sec-static-semantics-containsaccessorgroupmethoddefinition" type="sdo">
+      <h1>Static Semantics: ContainsAccessorGroupMethodDefinition</h1>
+      <dl class="header">
+      </dl>
+      <emu-grammar>
+        AccessorGroup : `{` `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Return *false*.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroup : `{` AccessorGroupElement `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Return ContainsAccessorGroupMethodDefinition of |AccessorGroupElement|.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroup : `{` AccessorGroupElement AccessorGroupElement `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Let _result_ be ContainsAccessorGroupMethodDefinition of the first |AccessorGroupElement|.
+        1. If _result_ is *true*, return *true*.
+        1. Return ContainsAccessorGroupMethodDefinition of the second |AccessorGroupElement|.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroupElement :
+          DecoratorList AccessorGroupGetMethodDefinition
+          DecoratorList AccessorGroupSetMethodDefinition
+          DecoratorList? AccessorGroupPrivateSetMethodDefinition
+          AccessorGroupGetMethodDefinition
+          AccessorGroupSetMethodDefinition
+      </emu-grammar>
+      <emu-alg>
+        1. Return *true*.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroupElement :
+          DecoratorList? AccessorGroupGetMethodStub
+          DecoratorList? AccessorGroupSetMethodStub
+          DecoratorList? AccessorGroupPrivateSetMethodStub
+      </emu-grammar>
+      <emu-alg>
+        1. Return *false*.
+      </emu-alg>
+      <emu-note>
+        DRAFT NOTE: Used to determine whether an |AccessorGroup| contains any method definitions (i.e., |AccessorGroupGetMethodDefinition|, |AccessorGroupSetMethodDefinition|, |AccessorGroupPrivateSetMethodDefinition|).
+      </emu-note>
+    </emu-clause>
+
+    <emu-clause id="sec-static-semantics-containsaccessorgroupmethodstub" type="sdo">
+      <h1>Static Semantics: ContainsAccessorGroupMethodStub</h1>
+      <dl class="header">
+      </dl>
+      <emu-grammar>
+        AccessorGroup : `{` `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Return *false*.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroup : `{` AccessorGroupElement `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Return ContainsAccessorGroupMethodStub of |AccessorGroupElement|.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroup : `{` AccessorGroupElement AccessorGroupElement `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Let _result_ be ContainsAccessorGroupMethodStub of the first |AccessorGroupElement|.
+        1. If _result_ is *true*, return *true*.
+        1. Return ContainsAccessorGroupMethodStub of the second |AccessorGroupElement|.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroupElement :
+          DecoratorList AccessorGroupGetMethodDefinition
+          DecoratorList AccessorGroupSetMethodDefinition
+          DecoratorList? AccessorGroupPrivateSetMethodDefinition
+          AccessorGroupGetMethodDefinition
+          AccessorGroupSetMethodDefinition
+      </emu-grammar>
+      <emu-alg>
+        1. Return *false*.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroupElement :
+          DecoratorList? AccessorGroupGetMethodStub
+          DecoratorList? AccessorGroupSetMethodStub
+          DecoratorList? AccessorGroupPrivateSetMethodStub
+      </emu-grammar>
+      <emu-alg>
+        1. Return *true*.
+      </emu-alg>
+      <emu-note>
+        DRAFT NOTE: Used to determine whether an |AccessorGroup| contains any method stubs (i.e., |AccessorGroupGetMethodStub|, |AccessorGroupSetMethodStub|, or |AccessorGroupPrivateSetMethodStub|).
+      </emu-note>
+    </emu-clause>
+
+    <emu-clause id="sec-static-semantics-containsaccessorgroupgetmethod" type="sdo">
+      <h1>Static Semantics: ContainsAccessorGroupGetMethod</h1>
+      <dl class="header">
+      </dl>
+      <emu-grammar>
+        AccessorGroup : `{` `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Return *false*.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroup : `{` AccessorGroupElement `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Return ContainsAccessorGroupGetMethod of |AccessorGroupElement|.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroup : `{` AccessorGroupElement AccessorGroupElement `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Let _result_ be ContainsAccessorGroupGetMethod of the first |AccessorGroupElement|.
+        1. If _result_ is *true*, return *true*.
+        1. Return ContainsAccessorGroupGetMethod of the second |AccessorGroupElement|.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroupElement :
+          DecoratorList AccessorGroupGetMethodDefinition
+          DecoratorList? AccessorGroupGetMethodStub
+          AccessorGroupGetMethodDefinition
+      </emu-grammar>
+      <emu-alg>
+        1. Return *true*.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroupElement :
+          DecoratorList AccessorGroupSetMethodDefinition
+          DecoratorList? AccessorGroupSetMethodStub
+          DecoratorList? AccessorGroupPrivateSetMethodDefinition
+          DecoratorList? AccessorGroupPrivateSetMethodStub
+          AccessorGroupSetMethodDefinition
+      </emu-grammar>
+      <emu-alg>
+        1. Return *false*.
+      </emu-alg>
+      <emu-note>
+        DRAFT NOTE: Used to determine whether an |AccessorGroup| contains a getter (i.e., |AccessorGroupGetMethodDefinition| or |AccessorGroupGetMethodStub|).
+      </emu-note>
+    </emu-clause>
+
+    <emu-clause id="sec-static-semantics-containsaccessorgroupsetmethod" type="sdo">
+      <h1>Static Semantics: ContainsAccessorGroupSetMethod</h1>
+      <dl class="header">
+      </dl>
+      <emu-grammar>
+        AccessorGroup : `{` `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Return *false*.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroup : `{` AccessorGroupElement `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Return ContainsAccessorGroupSetMethod of |AccessorGroupElement|.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroup : `{` AccessorGroupElement AccessorGroupElement `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Let _result_ be ContainsAccessorGroupSetMethod of the first |AccessorGroupElement|.
+        1. If _result_ is *true*, return *true*.
+        1. Return ContainsAccessorGroupSetMethod of the second |AccessorGroupElement|.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroupElement :
+          DecoratorList AccessorGroupGetMethodDefinition
+          DecoratorList? AccessorGroupGetMethodStub
+          AccessorGroupGetMethodDefinition
+      </emu-grammar>
+      <emu-alg>
+        1. Return *false*.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroupElement :
+          DecoratorList AccessorGroupSetMethodDefinition
+          DecoratorList? AccessorGroupSetMethodStub
+          DecoratorList? AccessorGroupPrivateSetMethodDefinition
+          DecoratorList? AccessorGroupPrivateSetMethodStub
+          AccessorGroupSetMethodDefinition
+      </emu-grammar>
+      <emu-alg>
+        1. Return *true*.
+      </emu-alg>
+      <emu-note>
+        DRAFT NOTE: Used to determine whether an |AccessorGroup| contains a setter (i.e., |AccessorGroupSetMethodDefinition|, |AccessorGroupPrivateSetMethodDefinition|, |AccessorGroupSetMethodStub|, or |AccessorGroupPrivateSetMethodStub|).
+      </emu-note>
+    </emu-clause>
+
+    <emu-clause id="sec-static-semantics-containsaccessorgroupprivatemethod" type="sdo">
+      <h1>Static Semantics: ContainsAccessorGroupPrivateMethod</h1>
+      <dl class="header">
+      </dl>
+      <emu-grammar>
+        AccessorGroup : `{` `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Return *false*.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroup : `{` AccessorGroupElement `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Return ContainsAccessorGroupPrivateMethod of |AccessorGroupElement|.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroup : `{` AccessorGroupElement AccessorGroupElement `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Let _result_ be ContainsAccessorGroupPrivateMethod of the first |AccessorGroupElement|.
+        1. If _result_ is *true*, return *true*.
+        1. Return ContainsAccessorGroupPrivateMethod of the second |AccessorGroupElement|.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroupElement :
+          DecoratorList AccessorGroupGetMethodDefinition
+          DecoratorList AccessorGroupSetMethodDefinition
+          DecoratorList? AccessorGroupGetMethodStub
+          DecoratorList? AccessorGroupSetMethodStub
+          AccessorGroupGetMethodDefinition
+          AccessorGroupSetMethodDefinition
+      </emu-grammar>
+      <emu-alg>
+        1. Return *false*.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroupElement :
+          DecoratorList? AccessorGroupPrivateSetMethodDefinition
+          DecoratorList? AccessorGroupPrivateSetMethodStub
+      </emu-grammar>
+      <emu-alg>
+        1. Return *true*.
+      </emu-alg>
+      <emu-note>
+        DRAFT NOTE: Used to determine whether an |AccessorGroup| contains a private method (i.e., |AccessorGroupPrivateSetMethodDefinition| or |AccessorGroupPrivateSetMethodStub|).
+      </emu-note>
+    </emu-clause>
+    </ins>
+
+    <emu-clause id="sec-runtime-semantics-classfielddefinitionevaluation" type="sdo">
+      <h1>
+        Runtime Semantics: ClassFieldDefinitionEvaluation (
+          _homeObject_: unknown,
+        )
+      </h1>
+      <dl class="header">
+      </dl>
+      <emu-grammar>
+        <del>FieldDefinition : `accessor` ClassElementName Initializer?</del>
+        <ins>FieldDefinition : `accessor` ClassElementName Initializer? `;`</ins>
+      </emu-grammar>
+      <emu-alg>
+        1. Let _name_ be the result of evaluating |ClassElementName|.
+        1. ReturnIfAbrupt(_name_).
+        1. Let _privateStateDesc_ be the string-concatenation of _name_ and `" accessor storage"`.
+        1. Let _privateStateName_ be a new Private Name whose [[Description]] value is _privateStateDesc_.
+        1. Let _getter_ be MakeAutoAccessorGetter(_homeObject_, _name_, _privateStateName_).
+        1. Let _setter_ be MakeAutoAccessorSetter(_homeObject_, _name_, _privateStateName_).
+        1. Let _initializer_ be a new empty List.
+        1. If |Initializer?| is present, then
+          1. Let _initializer_ be CreateFieldInitializerFunction(_homeObject_, _name_, |Initializer|).
+          1. Append _initializer_ to _initializers_.
+        1. If _name_ is not a Private Name, then
+          1. Let _desc_ be the PropertyDescriptor { [[Get]]: _getter_, [[Set]]: _setter_, [[Enumerable]]: *true*, [[Configurable]]: *true* }.
+          1. Perform ? DefinePropertyOrThrow(_homeObject_, _name_, _desc_).
+        1. Return ClassElementDefinition Record { [[Key]]: _name_, [[Kind]]: ~accessor~, [[Get]]: _getter_, [[Set]]: _setter_, [[BackingStorageKey]]: _privateStateName_, <ins>[[PrivateSetKey]]: ~empty~,</ins> [[Initializers]]: _initializers_, [[Decorators]]: ~empty~<ins>, [[GetDecorators]]: ~empty~, [[SetDecorators]]: ~empty~</ins> }.
+      </emu-alg>
+      <ins class="block">
+      <emu-grammar>
+        FieldDefinition : `accessor` ClassElementName AccessorGroup Initializer `;`
+      </emu-grammar>
+      <emu-alg>
+        1. Let _name_ be the result of evaluating |ClassElementName|.
+        1. ReturnIfAbrupt(_name_).
+        1. Let _privateStateDesc_ be the string-concatenation of _name_ and `" accessor storage"`.
+        1. Let _privateStateName_ be a new Private Name whose [[Description]] value is _privateStateDesc_.
+        1. If ContainsAccessorGroupPrivateMethod of |AccessorGroup| is *true*, then
+          1. Assert: Type(_name_) is String.
+          1. Let _setterPrivateIdentifier_ be the string-concatenation of 0x0023 (NUMBER SIGN) and _name_.
+          1. Let _privateEnvRec_ be the running execution context's PrivateEnvironment.
+          1. Let _names_ be _privateEnvRec_.[[Names]].
+          1. Assert: Exactly one element of _names_ is a Private Name whose [[Description]] is _setterPrivateIdentifier_.
+          1. Let _setterPrivateName_ be the Private Name in _names_ whose [[Description]] is _setterPrivateIdentifier_.
+        1. Else,
+          1. Let _setterPrivateName_ be ~empty~.
+        1. Let _accessorGroup_ be the ClassElementDefinition Record { [[Key]]: _name_, [[Kind]]: ~accessor~, [[Get]]: *undefined*, [[Set]]: *undefined*, [[BackingStorageKey]]: _privateStateName_, [[PrivateSetKey]]: _setterPrivateName_, [[Initializers]]: a new empty List, [[Decorators]] ~empty~, [[GetDecorators]]: ~empty~, [[SetDecorators]]: ~empty~ }.
+        1. Set _accessorGroup_ to ? AccessorGroupEvaluation of |AccessorGroup| with arguments _homeObject_ and _accessorGroup_.
+        1. Let _initializer_ be CreateFieldInitializerFunction(_homeObject_, _name_, |Initializer|).
+        1. Append _initializer_ to _accessorGroup_.[[Initializers]].
+        1. Return _accessorGroup_.
+      </emu-alg>
+      <emu-grammar>
+        FieldDefinition : `accessor` ClassElementName AccessorGroup
+      </emu-grammar>
+      <emu-alg>
+        1. Let _name_ be the result of evaluating |ClassElementName|.
+        1. ReturnIfAbrupt(_name_).
+        1. If ContainsAccessorGroupMethodStub of |AccessorGroup| is *true*, then
+          1. Let _privateStateDesc_ be the string-concatenation of _name_ and `" accessor storage"`.
+          1. Let _privateStateName_ be a new Private Name whose [[Description]] value is _privateStateDesc_.
+        1. Else,
+          1. Let _privateStateName_ be ~empty~.
+        1. If ContainsAccessorGroupPrivateMethod of |AccessorGroup| is *true*, then
+          1. Assert: Type(_name_) is String.
+          1. Let _setterPrivateIdentifier_ be the string-concatenation of 0x0023 (NUMBER SIGN) and _name_.
+          1. Let _privateEnvRec_ be the running execution context's PrivateEnvironment.
+          1. Let _names_ be _privateEnvRec_.[[Names]].
+          1. Assert: Exactly one element of _names_ is a Private Name whose [[Description]] is _setterPrivateIdentifier_.
+          1. Let _setterPrivateName_ be the Private Name in _names_ whose [[Description]] is _setterPrivateIdentifier_.
+        1. Else,
+          1. Let _setterPrivateName_ be ~empty~.
+        1. Let _accessorGroup_ be the ClassElementDefinition Record { [[Key]]: _name_, [[Kind]]: ~accessor~, [[Get]]: *undefined*, [[Set]]: *undefined*, [[BackingStorageKey]]: _privateStateName_, [[PrivateSetKey]]: _setterPrivateName_, [[Initializers]]: a new empty List, [[Decorators]] ~empty~, [[GetDecorators]]: ~empty~, [[SetDecorators]]: ~empty~ }.
+        1. Set _accessorGroup_ to ? AccessorGroupEvaluation of |AccessorGroup| with arguments _homeObject_ and _accessorGroup_.
+        1. Return _accessorGroup_.
+      </emu-alg>
+      </ins>
+    </emu-clause>
+
+    <ins class="block">
+    <emu-clause id="sec-runtime-semantics-accessorgroupevaluation" type="sdo">
+      <h1>
+        Runtime Semantics: AccessorGroupEvaluation (
+          _homeObject_: unknown,
+          _accessorGroup_: a ClassElementDefinition Record
+        )
+      </h1>
+      <dl class="header">
+      </dl>
+
+      <emu-grammar>
+        AccessorGroup : `{` `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Assert: _accessorGroup_.[[BackingStorageKey]] is a Private Name.
+        1. Assert: _accessorGroup_.[[PrivateSetKey]] is ~empty~.
+        1. Assert: _accessorGroup_.[[Get]] is *undefined*.
+        1. Assert: _accessorGroup_.[[Set]] is *undefined*.
+        1. Let _name_ be _accessorGroup_.[[Key]].
+        1. Let _privateStateName_ be _accessorGroup_.[[BackingStorageKey]].
+        1. Let _getter_ be MakeAutoAccessorGetter(_homeObject_, _name_, _privateStateName_).
+        1. Let _setter_ be MakeAutoAccessorSetter(_homeObject_, _name_, _privateStateName_).
+        1. Set _accessorGroup_.[[Get]] to _getter_.
+        1. Set _accessorGroup_.[[Set]] to _setter_.
+        1. Return _accessorGroup_.
+      </emu-alg>
+
+      <emu-grammar>
+        AccessorGroup : `{` AccessorGroupElement `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Return AccessorGroupEvaluation of |AccessorGroupElement| with arguments _homeObject_ and _accessorGroup_.
+      </emu-alg>
+
+      <emu-grammar>
+        AccessorGroup : `{` AccessorGroupElement AccessorGroupElement `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Set _accessorGroup_ to ? AccessorGroupEvaluation of the first |AccessorGroupElement| with arguments _homeObject_ and _accessorGroup_.
+        1. Return ? AccessorGroupEvaluation of the second |AccessorGroupElement| with arguments _homeObject_ and _accessorGroup_.
+      </emu-alg>
+
+      <emu-grammar>
+        AccessorGroupElement : DecoratorList AccessorGroupGetMethodDefinition
+      </emu-grammar>
+      <emu-alg>
+        1. If |DecoratorList?| is present, let _decorators_ be ? DecoratorListEvaluation of |DecoratorList|.
+        1. Else, let _decorators_ be a new empty List.
+        1. Set _accessorGroup_ to ? AccessorGroupEvaluation of |AccessorGroupGetMethodDefinition| with arguments _homeObject_ and _accessorGroup_.
+        1. Set _accessorGroup_.[[GetDecorators]] to _decorators_.
+        1. Return _accessorGroup_.
+      </emu-alg>
+
+      <emu-grammar>
+        AccessorGroupElement : AccessorGroupGetMethodDefinition
+      </emu-grammar>
+      <emu-alg>
+        1. Return AccessorGroupEvaluation of |AccessorGroupGetMethodDefinition| with arguments _homeObject_ and _accessorGroup_.
+      </emu-alg>
+
+      <emu-grammar>
+        AccessorGroupElement : DecoratorList? AccessorGroupGetMethodStub
+      </emu-grammar>
+      <emu-alg>
+        1. If |DecoratorList?| is present, let _decorators_ be ? DecoratorListEvaluation of |DecoratorList|.
+        1. Else, let _decorators_ be a new empty List.
+        1. Set _accessorGroup_ to ? AccessorGroupEvaluation of |AccessorGroupGetMethodStub| with arguments _homeObject_ and _accessorGroup_.
+        1. Set _accessorGroup_.[[GetDecorators]] to _decorators_.
+        1. Return _accessorGroup_.
+      </emu-alg>
+
+      <emu-grammar>
+        AccessorGroupElement : DecoratorList AccessorGroupSetMethodDefinition
+      </emu-grammar>
+      <emu-alg>
+        1. If |DecoratorList?| is present, let _decorators_ be ? DecoratorListEvaluation of |DecoratorList|.
+        1. Else, let _decorators_ be a new empty List.
+        1. Set _accessorGroup_ to ? AccessorGroupEvaluation of |AccessorGroupSetMethodDefinition| with arguments _homeObject_ and _accessorGroup_.
+        1. Set _accessorGroup_.[[SetDecorators]] to _decorators_.
+        1. Return _accessorGroup_.
+      </emu-alg>
+
+      <emu-grammar>
+        AccessorGroupElement : AccessorGroupSetMethodDefinition
+      </emu-grammar>
+      <emu-alg>
+        1. Return AccessorGroupEvaluation of |AccessorGroupSetMethodDefinition| with arguments _homeObject_ and _accessorGroup_.
+      </emu-alg>
+
+      <emu-grammar>
+        AccessorGroupElement : DecoratorList? AccessorGroupSetMethodStub
+      </emu-grammar>
+      <emu-alg>
+        1. If |DecoratorList?| is present, let _decorators_ be ? DecoratorListEvaluation of |DecoratorList|.
+        1. Else, let _decorators_ be a new empty List.
+        1. Set _accessorGroup_ to ? AccessorGroupEvaluation of |AccessorGroupSetMethodStub| with arguments _homeObject_ and _accessorGroup_.
+        1. Set _accessorGroup_.[[SetDecorators]] to _decorators_.
+        1. Return _accessorGroup_.
+      </emu-alg>
+
+      <emu-grammar>
+        AccessorGroupElement : DecoratorList? AccessorGroupPrivateSetMethodDefinition
+      </emu-grammar>
+      <emu-alg>
+        1. If |DecoratorList?| is present, let _decorators_ be ? DecoratorListEvaluation of |DecoratorList|.
+        1. Else, let _decorators_ be a new empty List.
+        1. Set _accessorGroup_ to ? AccessorGroupEvaluation of |AccessorGroupPrivateSetMethodDefinition| with arguments _homeObject_ and _accessorGroup_.
+        1. Set _accessorGroup_.[[SetDecorators]] to _decorators_.
+        1. Return _accessorGroup_.
+      </emu-alg>
+
+      <emu-grammar>
+        AccessorGroupElement : DecoratorList? AccessorGroupPrivateSetMethodStub
+      </emu-grammar>
+      <emu-alg>
+        1. If |DecoratorList?| is present, let _decorators_ be ? DecoratorListEvaluation of |DecoratorList|.
+        1. Else, let _decorators_ be a new empty List.
+        1. Set _accessorGroup_ to ? AccessorGroupEvaluation of |AccessorGroupPrivateSetMethodStub| with arguments _homeObject_ and _accessorGroup_.
+        1. Set _accessorGroup_.[[SetDecorators]] to _decorators_.
+        1. Return _accessorGroup_.
+      </emu-alg>
+
+      <emu-grammar>
+        AccessorGroupGetMethodDefinition : `get` `(` `)` `{` FunctionBody `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Assert: _accessorGroup_.[[BackingStorageKey]] is ~empty~.
+        1. Assert: _accessorGroup_.[[Get]] is *undefined*.
+        1. Let _name_ be _accessorGroup_.[[Key]].
+        1. Let _env_ be the running execution context's LexicalEnvironment.
+        1. Let _privateEnv_ be the running execution context's PrivateEnvironment.
+        1. Let _sourceText_ be the source text matched by |GetAccessorMethodDefinition|.
+        1. Let _formalParameterList_ be an instance of the production <emu-grammar>FormalParameters: [empty]</emu-grammar>
+        1. Let _closure_ be OrdinaryFunctionCreate(%Function.prototype%, _sourceText_, _formalParameterList_, |FunctionBody|, ~non-lexical-this~, _env_, _privateEnv_).
+        1. Perform MakeMethod(_closure_, _homeObject_).
+        1. Perform SetFunctionName(_closure_, _privateName_, `"get"`).
+        1. Set _accessorGroup_.[[Set]] to _closure_.
+        1. Return _accessorGroup_.
+      </emu-alg>
+
+      <emu-grammar>
+        AccessorGroupSetMethodDefinition : `set` `(` PropertySetParameterList `)` `{` FunctionBody `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Assert: _accessorGroup_.[[BackingStorageKey]] is ~empty~.
+        1. Assert: _accessorGroup_.[[PrivateSetKey]] is ~empty~.
+        1. Assert: _accessorGroup_.[[Set]] is *undefined*.
+        1. Let _name_ be _accessorGroup_.[[Key]].
+        1. Let _env_ be the running execution context's LexicalEnvironment.
+        1. Let _privateEnv_ be the running execution context's PrivateEnvironment.
+        1. Let _sourceText_ be the source text matched by |SetAccessorMethodDefinition|.
+        1. Let _closure_ be OrdinaryFunctionCreate(%Function.prototype%, _sourceText_, |PropertySetParameterList|, |FunctionBody|, ~non-lexical-this~, _env_, _privateEnv_).
+        1. Perform MakeMethod(_closure_, _homeObject_).
+        1. Perform SetFunctionName(_closure_, _privateName_, `"set"`).
+        1. Set _accessorGroup_.[[Set]] to _closure_.
+        1. Return _accessorGroup_.
+      </emu-alg>
+
+      <emu-grammar>
+        AccessorGroupPrivateSetMethodDefinition : `#set` `(` PropertySetParameterList `)` `{` FunctionBody `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Assert: _accessorGroup_.[[BackingStorageKey]] is ~empty~.
+        1. Assert: _accessorGroup_.[[PrivateSetKey]] is a Private Name.
+        1. Assert: _accessorGroup_.[[Set]] is *undefined*.
+        1. Let _name_ be _accessorGroup_.[[PrivateSetKey]].
+        1. Let _env_ be the running execution context's LexicalEnvironment.
+        1. Let _privateEnv_ be the running execution context's PrivateEnvironment.
+        1. Let _sourceText_ be the source text matched by |PrivateSetAccessorMethodDefinition|.
+        1. Let _closure_ be OrdinaryFunctionCreate(%Function.prototype%, _sourceText_, |PropertySetParameterList|, |FunctionBody|, ~non-lexical-this~, _env_, _privateEnv_).
+        1. Perform MakeMethod(_closure_, _homeObject_).
+        1. Perform SetFunctionName(_closure_, _name_, `"set"`).
+        1. Set _accessorGroup_.[[Set]] to _closure_.
+        1. Return _accessorGroup_.
+      </emu-alg>
+
+      <emu-grammar>
+        AccessorGroupGetMethodStub : `get` `;`
+      </emu-grammar>
+      <emu-alg>
+        1. Assert: _accessorGroup_.[[BackingStorageKey]] is a Private Name.
+        1. Assert: _accessorGroup_.[[Get]] is *undefined*.
+        1. Let _name_ be _accessorGroup_.[[Key]].
+        1. Let _privateStateName_ be _accessorGroup_.[[BackingStorageKey]].
+        1. Let _closure_ be MakeAutoAccessorGetter(_homeObject_, _name_, _privateStateName_).
+        1. Set _accessorGroup_.[[Get]] to _closure_.
+        1. Return _accessorGroup_.
+      </emu-alg>
+
+      <emu-grammar>
+        AccessorGroupSetMethodStub : `set` `;`
+      </emu-grammar>
+      <emu-alg>
+        1. Assert: _accessorGroup_.[[BackingStorageKey]] is a Private Name.
+        1. Assert: _accessorGroup_.[[PrivateSetKey]] is ~empty~.
+        1. Assert: _accessorGroup_.[[Set]] is *undefined*.
+        1. Let _name_ be _accessorGroup_.[[Key]].
+        1. Let _privateStateName_ be _accessorGroup_.[[BackingStorageKey]].
+        1. Let _closure_ be MakeAutoAccessorSetter(_homeObject_, _name_, _privateStateName_).
+        1. Set _accessorGroup_.[[Set]] to _closure_.
+        1. Return _accessorGroup_.
+      </emu-alg>
+
+      <emu-grammar>
+        AccessorGroupPrivateSetMethodStub : `#set` `;`
+      </emu-grammar>
+      <emu-alg>
+        1. Assert: _accessorGroup_.[[BackingStorageKey]] is a Private Name.
+        1. Assert: _accessorGroup_.[[PrivateSetKey]] is a Private Name.
+        1. Assert: _accessorGroup_.[[Set]] is *undefined*.
+        1. Let _name_ be _accessorGroup_.[[PrivateSetKey]].
+        1. Let _closure_ be MakeAutoAccessorSetter(_homeObject_, _name_, _privateStateName_).
+        1. Set _accessorGroup_.[[Set]] to _closure_.
+        1. Return _accessorGroup_.
+      </emu-alg>
+    </emu-clause>
+    </ins>
+  </emu-clause>
 </emu-clause>
