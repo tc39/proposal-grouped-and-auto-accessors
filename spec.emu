@@ -341,7 +341,6 @@ contributors: Ron Buckton, Ecma International
   </emu-clause>
 </emu-clause>
 
-
 <emu-clause id="sec-ecmascript-language-functions-and-classes">
   <h1>ECMAScript Language: Functions and Classes</h1>
 
@@ -692,79 +691,10 @@ contributors: Ron Buckton, Ecma International
       </emu-note>
     </emu-clause>
 
-    <emu-clause id="sec-static-semantics-containsaccessorgroupmethodstub" type="sdo">
-      <h1>Static Semantics: ContainsAccessorGroupMethodStub</h1>
-      <dl class="header">
-      </dl>
-      <emu-grammar>
-        AccessorGroup : `{` `}`
-      </emu-grammar>
-      <emu-alg>
-        1. Return *false*.
-      </emu-alg>
-      <emu-grammar>
-        AccessorGroup : `{` AccessorGroupElement `}`
-      </emu-grammar>
-      <emu-alg>
-        1. Return ContainsAccessorGroupMethodStub of |AccessorGroupElement|.
-      </emu-alg>
-      <emu-grammar>
-        AccessorGroup : `{` AccessorGroupElement AccessorGroupElement `}`
-      </emu-grammar>
-      <emu-alg>
-        1. Let _result_ be ContainsAccessorGroupMethodStub of the first |AccessorGroupElement|.
-        1. If _result_ is *true*, return *true*.
-        1. Return ContainsAccessorGroupMethodStub of the second |AccessorGroupElement|.
-      </emu-alg>
-      <emu-grammar>
-        AccessorGroupElement :
-          DecoratorList AccessorGroupGetMethodDefinition
-          DecoratorList AccessorGroupSetMethodDefinition
-          DecoratorList? AccessorGroupPrivateSetMethodDefinition
-          AccessorGroupGetMethodDefinition
-          AccessorGroupSetMethodDefinition
-      </emu-grammar>
-      <emu-alg>
-        1. Return *false*.
-      </emu-alg>
-      <emu-grammar>
-        AccessorGroupElement :
-          DecoratorList? AccessorGroupGetMethodStub
-          DecoratorList? AccessorGroupSetMethodStub
-          DecoratorList? AccessorGroupPrivateSetMethodStub
-      </emu-grammar>
-      <emu-alg>
-        1. Return *true*.
-      </emu-alg>
-      <emu-note>
-        DRAFT NOTE: Used to determine whether an |AccessorGroup| contains any method stubs (i.e., |AccessorGroupGetMethodStub|, |AccessorGroupSetMethodStub|, or |AccessorGroupPrivateSetMethodStub|).
-      </emu-note>
-    </emu-clause>
-
     <emu-clause id="sec-static-semantics-containsaccessorgroupgetmethod" type="sdo">
       <h1>Static Semantics: ContainsAccessorGroupGetMethod</h1>
       <dl class="header">
       </dl>
-      <emu-grammar>
-        AccessorGroup : `{` `}`
-      </emu-grammar>
-      <emu-alg>
-        1. Return *false*.
-      </emu-alg>
-      <emu-grammar>
-        AccessorGroup : `{` AccessorGroupElement `}`
-      </emu-grammar>
-      <emu-alg>
-        1. Return ContainsAccessorGroupGetMethod of |AccessorGroupElement|.
-      </emu-alg>
-      <emu-grammar>
-        AccessorGroup : `{` AccessorGroupElement AccessorGroupElement `}`
-      </emu-grammar>
-      <emu-alg>
-        1. Let _result_ be ContainsAccessorGroupGetMethod of the first |AccessorGroupElement|.
-        1. If _result_ is *true*, return *true*.
-        1. Return ContainsAccessorGroupGetMethod of the second |AccessorGroupElement|.
-      </emu-alg>
       <emu-grammar>
         AccessorGroupElement :
           DecoratorList AccessorGroupGetMethodDefinition
@@ -794,26 +724,6 @@ contributors: Ron Buckton, Ecma International
       <h1>Static Semantics: ContainsAccessorGroupSetMethod</h1>
       <dl class="header">
       </dl>
-      <emu-grammar>
-        AccessorGroup : `{` `}`
-      </emu-grammar>
-      <emu-alg>
-        1. Return *false*.
-      </emu-alg>
-      <emu-grammar>
-        AccessorGroup : `{` AccessorGroupElement `}`
-      </emu-grammar>
-      <emu-alg>
-        1. Return ContainsAccessorGroupSetMethod of |AccessorGroupElement|.
-      </emu-alg>
-      <emu-grammar>
-        AccessorGroup : `{` AccessorGroupElement AccessorGroupElement `}`
-      </emu-grammar>
-      <emu-alg>
-        1. Let _result_ be ContainsAccessorGroupSetMethod of the first |AccessorGroupElement|.
-        1. If _result_ is *true*, return *true*.
-        1. Return ContainsAccessorGroupSetMethod of the second |AccessorGroupElement|.
-      </emu-alg>
       <emu-grammar>
         AccessorGroupElement :
           DecoratorList AccessorGroupGetMethodDefinition
@@ -887,6 +797,61 @@ contributors: Ron Buckton, Ecma International
         DRAFT NOTE: Used to determine whether an |AccessorGroup| contains a private method (i.e., |AccessorGroupPrivateSetMethodDefinition| or |AccessorGroupPrivateSetMethodStub|).
       </emu-note>
     </emu-clause>
+
+    <emu-clause id="sec-static-semantics-containsaccessorgroupmethodstub" type="sdo">
+      <h1>Static Semantics: ContainsAccessorGroupMethodStub</h1>
+      <dl class="header">
+      </dl>
+      <emu-grammar>
+        AccessorGroupElement :
+          DecoratorList AccessorGroupGetMethodDefinition
+          DecoratorList AccessorGroupSetMethodDefinition
+          DecoratorList? AccessorGroupPrivateSetMethodDefinition
+          AccessorGroupGetMethodDefinition
+          AccessorGroupSetMethodDefinition
+      </emu-grammar>
+      <emu-alg>
+        1. Return *false*.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroupElement :
+          DecoratorList? AccessorGroupGetMethodStub
+          DecoratorList? AccessorGroupSetMethodStub
+          DecoratorList? AccessorGroupPrivateSetMethodStub
+      </emu-grammar>
+      <emu-alg>
+        1. Return *true*.
+      </emu-alg>
+      <emu-note>
+        DRAFT NOTE: Used to determine whether an |AccessorGroup| contains any method stubs (i.e., |AccessorGroupGetMethodStub|, |AccessorGroupSetMethodStub|, or |AccessorGroupPrivateSetMethodStub|).
+      </emu-note>
+    </emu-clause>
+
+    <emu-clause id="sec-static-semantics-isautoaccessor" type="sdo">
+      <h1>Static Semantics: IsAutoAccessor</h1>
+      <dl class="header">
+      </dl>
+      <emu-grammar>
+        AccessorGroup : `{` `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Return *true*.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroup : `{` AccessorGroupElement `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Return ContainsAccessorGroupMethodStub of |AccessorGroupElement|.
+      </emu-alg>
+      <emu-grammar>
+        AccessorGroup : `{` AccessorGroupElement AccessorGroupElement `}`
+      </emu-grammar>
+      <emu-alg>
+        1. Let _result_ be ContainsAccessorGroupMethodStub of the first |AccessorGroupElement|.
+        1. If _result_ is *true*, return *true*.
+        1. Return ContainsAccessorGroupMethodStub of the second |AccessorGroupElement|.
+      </emu-alg>
+    </emu-clause>
     </ins>
 
     <emu-clause id="sec-runtime-semantics-classfielddefinitionevaluation" type="sdo">
@@ -947,7 +912,7 @@ contributors: Ron Buckton, Ecma International
       <emu-alg>
         1. Let _name_ be the result of evaluating |ClassElementName|.
         1. ReturnIfAbrupt(_name_).
-        1. If ContainsAccessorGroupMethodStub of |AccessorGroup| is *true*, then
+        1. If IsAutoAccessor of |AccessorGroup| is *true*, then
           1. Let _privateStateDesc_ be the string-concatenation of _name_ and `" accessor storage"`.
           1. Let _privateStateName_ be a new Private Name whose [[Description]] value is _privateStateDesc_.
         1. Else,
