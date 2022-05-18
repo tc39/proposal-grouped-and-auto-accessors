@@ -97,9 +97,9 @@ class C {
   accessor e { set; } = 1;          // setter but no getter (use case: decorators)
   accessor f { get; #set; };        // getter with private setter `#f`;
   accessor g { #set; } = 1;         // private setter but no getter (use case: decorators)
-  accessor #h = 1;                  // same as `accessor #g { get; set; } = 1;`
-  accessor #i { } = 1;              // same as `accessor #h { get; set; } = 1;`
-  accessor #j { get; set; } = 1;    // same as `accessor #i = 1;`
+  accessor #h = 1;                  // same as `accessor #h { get; set; } = 1;`
+  accessor #i { } = 1;              // same as `accessor #i { get; set; } = 1;`
+  accessor #j { get; set; } = 1;    // same as `accessor #j = 1;`
   accessor #k { get; } = 1;         // getter but no setter
   accessor #l { set; } = 1;         // setter but no getter (use case: decorators)
 
