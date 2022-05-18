@@ -1105,7 +1105,7 @@ contributors: Ron Buckton, Ecma International
         1. Let _closure_ be OrdinaryFunctionCreate(%Function.prototype%, _sourceText_, _formalParameterList_, |FunctionBody|, ~non-lexical-this~, _env_, _privateEnv_).
         1. Perform MakeMethod(_closure_, _homeObject_).
         1. Perform SetFunctionName(_closure_, _privateName_, `"get"`).
-        1. Set _accessorGroup_.[[Set]] to _closure_.
+        1. Set _accessorGroup_.[[Get]] to _closure_.
         1. Return _accessorGroup_.
       </emu-alg>
 
