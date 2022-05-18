@@ -37,6 +37,11 @@ class C {
     get() { ... } // equivalent to `get #z() { ... }`
     set(value) { ... } // equivalent to `set #z(value) { ... }`
   }
+
+  static accessor x {
+    get() { ... } // equivalent to `static get x() { ... }`
+    set(value) { ... } // equivalent to `static set x(value) { ... }`
+  }
 }
 
 const obj = {
@@ -102,6 +107,7 @@ class C {
   accessor "foo";                   // same as `accessor "foo" { get; set; }`
   accessor 1;                       // same as `accessor 1 { get; set; }`
   accessor [x];                     // same as `accessor [x] { get; set; }`
+  static accessor a = 1;            // as well as all of the other non-static variants
 
   // not allowed:
   // accessor "bar" { get; #set; }  // error: no private setters for string properties
@@ -132,58 +138,13 @@ This provides the following benefits:
 
 ## Proposed Syntax
 
-```grammarkdown
-ClassElement[Yield, Await] :
-  ...
-  `accessor` ClassElementName[?Yield, ?Await] AccessorGroup Initializer[?Yield, ?Await] `;`
-  `accessor` ClassElementName[?Yield, ?Await] AccessorGroup
-  `accessor` ClassElementName[?Yield, ?Await] Initializer[?Yield, ?Await]? `;`
-
-AccessorGroup :
-  `{` `}`
-  `{` GetAccessorMethodOrStub SetAccessorMethodOrStub? `}`
-  `{` SetAccessorMethodOrStub GetAccessorMethodOrStub? `}`
-
-GetAccessorMethodOrStub :
-  GetAccessorMethod
-  GetAccessorStub
-
-GetAccessorMethod :
-  `get` `(` `)` `{` FunctionBody[~Yield, ~Await] `}`
-
-GetAccessorStub :
-  `get` `;`
-
-SetAccessorMethodOrStub :
-  SetAccessorMethod
-  SetAccessorStub
-
-SetAccessorMethod :
-  PublicSetAccessorMethod
-  PrivateSetAccessorMethod
-
-PublicSetAccessorMethod :
-  `set` `(` PropertySetParameterList `)` `{` FunctionBody[~Yield, ~Await] `}`
-
-PrivateSetAccessorMethod :
-  `#set` `(` PropertySetParameterList `)` `{` FunctionBody[~Yield, ~Await] `}`
-
-SetAccessorStub :
-  PublicSetAccessorStub
-  PrivateSetAccessorStub
-
-PublicSetAccessorStub :
-  `set` `;`
-
-PrivateSetAccessorStub :
-  `#set` `;`
-```
+Please see [the specification][Specification] for the proposed syntax.
 
 ## Proposed Semantics
 
-The following represents some approximate semantics for this proposal. The gist of which is the following:
+Please see [the specification][Specification] for the full proposed semantics. The following represents some approximate semantics for this proposal. The gist of which is the following:
 
-- Only `accessor` properties with _Identifier_ names can have a `#set` stub or `#set` method:
+- Only `accessor` properties with _IdentifierName_ names can have a `#set` stub or `#set` method:
     ```js
     class C {
         accessor x { get; #set; } // ok
@@ -233,151 +194,13 @@ The following represents some approximate semantics for this proposal. The gist 
         accessor z { get() { } #set(v) { } }; // error (collides with #z)
     }
     ```
-
-### Early Errors
-```grammarkdown
-ClassElement : `accessor` ClassElementName AccessorGroup Initializer `;`
-```
-- It is a Syntax Error if _AccessorGroup_ Contains _GetAccessorMethod_.
-- It is a Syntax Error if _AccessorGroup_ Contains _SetAccessorMethod_.
-- It is a Syntax Error if _ClassElementName_ is not _Identifier_ and _AccessorGroup_ Contains _PrivateSetAccessorStub_.
-
-```grammarkdown
-ClassElement : `accessor` ClassElementName AccessorGroup
-```
-- It is a Syntax Error if _AccessorGroup_ Contains _GetAccessorMethod_ and _AccessorGroup_ Contains _SetAccessorStub_.
-- It is a Syntax Error if _AccessorGroup_ Contains _SetAccessorMethod_ and _AccessorGroup_ Contains _GetAccessorStub_.
-- It is a Syntax Error if _ClassElementName_ is not _Identifier_ and _AccessorGroup_ Contains _PrivateSetAccessorStub_.
-- It is a Syntax Error if _ClassElementName_ is not _Identifier_ and _AccessorGroup_ Contains _PrivateSetAccessorMethod_.
-
-_**Under Consideration:** We may choose to make it an early error to have both a grouped `set` and a grouped `#set` for the
-same name on the same class._
-
-### ClassElementEvaluation
-
-With parameter _object_.
-
-```grammarkdown
-ClassElement : `accessor` ClassElementName AccessorGroup Initializer
-```
-1. Let _name_ be the result of evaluting _ClassElementName_.
-2. ReturnIfAbrupt(_name_).
-3. Let _initializer_ be a Function Object created in accordance with Step 3 of 
-   https://tc39.es/ecma262/#sec-runtime-semantics-classfielddefinitionevaluation.
-4. Return EvaluateAccessorGroup for _AccessorGroup_ with arguments _object_, _name_, and _initializer_.
-
-```grammarkdown
-ClassElement : `accessor` ClassElementName AccessorGroup
-```
-1. Let _name_ be the result of evaluting _ClassElementName_.
-2. ReturnIfAbrupt(_name_).
-3. Return EvaluateAccessorGroup for _AccessorGroup_ with arguments _object_, _name_, and ~empty~.
-
-```grammarkdown
-ClassElement : `accessor` ClassElementName Initializer `;`
-```
-1. Let _name_ be the result of evaluting _ClassElementName_.
-2. ReturnIfAbrupt(_name_).
-3. Let _initializer_ be a Function Object created in accordance with Step 3 of 
-   https://tc39.es/ecma262/#sec-runtime-semantics-classfielddefinitionevaluation.
-1. Return EvaluateAutoAccessor(_object_, _name_, _initializer_).
-
-```grammarkdown
-ClassElement : `accessor` ClassElementName `;`
-```
-1. Let _name_ be the result of evaluting _ClassElementName_.
-2. ReturnIfAbrupt(_name_).
-3. Return EvaluateAutoAccessor(_object_, _name_, ~empty~).
-
-### EvaluateAccessorGroup
-
-With parameters _object_, _name_, and _initializer_.
-
-_**NOTE:** The following semantics are approximate and will be specified in full at a later date._
-
-```grammarkdown
-AccessorGroup : `{` `}`
-```
-1. Return EvaluateAutoAccessor(_object_, _name_, _initializer_).
-
-```grammarkdown
-AccessorGroup : `{` GetAccessorStub SetAccessorStub? `}`
-AccessorGroup : `{` SetAccessorStub GetAccessorStub? `}`
-```
-1. Let _list_ be a new empty List.
-2. Let _backingFieldName_ be a unique Private Name (steps TBD).
-3. Let _backingField_ be a new ClassFieldDefinition Record { \[\[Name]]: _backingFieldName_, \[\[Initializer]]: _initializer_ }.
-4. If _GetAccessorStub_ is present, then
-    1. Let _getAccessor_ be ! DefineAccessorStub(_object_, _name_, ~get~, _backingFieldName_).
-    2. If _getAccessor_ is not ~empty~, append _getAccessor_ to _list_.
-5. If _SetAccessorStub_ is present, then
-    1. If _SetAccessorStub_ is a _PublicSetAccessorStub_ symbol, then:
-        1. Let _setAccessor_ be ! DefineAccessorStub(_object_, _name_, ~set~, _backingFieldName_).
-    2. Else,
-        2. Let _setAccessor_ be ! DefineAccessorStub(_object_, _name_, ~private-set~, _backingFieldName_).
-    3. If _setAccessor_ is not ~empty~, append _setAccessor_ to _list_.
-6. return _list_.
-
-```grammarkdown
-AccessorGroup : `{` GetAccessorMethod SetAccessorMethod? `}`
-AccessorGroup : `{` SetAccessorMethod GetAccessorMethod? `}`
-```
-1. Assert: _initializer_ is ~empty~.
-2. Let _list_ be a new empty List.
-3. If _GetAccessorMethod_ is present, then
-    1. Let _getAccessor_ be ? DefineAccessorMethod of _GetAccessorMethod_ with arguments _object_ and _name_.
-    2. If _getAccessor_ is not ~empty~, append _getAccessor_ to _list_.
-4. If _SetAccessorMethod_ is present, then
-    1. Let _setAccessor_ be ? DefineAccessorMethod of _SetAccessorMethod_ with arguments _object_ and _name_.
-    2. If _setAccessor_ is not ~empty~, append _setAccessor_ to _list_.
-5. Return _list_.
-
-### EvaluateAutoAccessor ( _object_, _name_, _initializer_ )
-
-1. Let _list_ be a new empty List.
-2. Let _backingFieldName_ be a unique Private Name (steps TBD).
-3. Let _backingField_ be a new ClassFieldDefinition Record { \[\[Name]]: _backingFieldName_, \[\[Initializer]]: _initializer_ }.
-4. Let _getAccessor_ be ! DefineAccessorStub(_object_, _name_, ~get~, _backingFieldName_).
-5. Append _getAccessor_ to _list_.
-6. Let _setAccessor_ be ! DefineAccessorStub(_object_, _name_, ~set~, _backingFieldName_).
-7. Append _setAccessor_ to _list_.
-8. return _list_.
-
-### DefineAccessorStub ( _object_, _name_, _kind_, _backingFieldName_ )
-
-1. If _kind_ is ~get~, then
-    1. Return the result of defining a getter method on _object_ named _name_ that returns the value of _backingFieldName_ (steps TBD).
-2. If _kind_ is ~set~, then
-    1. Return the result of defining a setter method on _object_ named _name_ that returns the value of _backingFieldName_ (steps TBD).
-3. If _kind_ is ~private-set~, then
-    1. Assert: _name_ is not a Private NAme.
-    2. Let _privateIdentifier_ be the string-concatenation of 0x0023 (NUMBER SIGN) and _name_.
-    3. Let _privateName_ be a Private Name for _privateIdentifier_, similar to the steps for `ClassElementName : PrivateIdentifier` in 
-       https://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-evaluation (steps TBD).
-    4. Return the result of defining a setter method on _object_ named _name_ that returns the value of _backingFieldName_ (steps TBD).
-
-### DefineAccessorMethod
-
-With arguments _object_ and _name_.
-
-```grammarkdown
-GetAccessorMethod : `get` `(` `)` `{` FunctionBody `}`
-```
-1. Return the result of defining a getter method on _object_ named _name_ whose body is _FunctionBody_ (steps TBD).
-
-```grammarkdown
-PublicSetAccessorMethod : `set` `(` PropertySetParameterList `)` `{` FunctionBody `}`
-```
-1. Return the result of defining a setter method on _object_ named _name_ with parameters _PropertySetParameterList_ and
-    whose body is _FunctionBody_ (steps TBD).
-
-```grammarkdown
-PrivateSetAccessorMethod : `#set` `(` PropertySetParameterList `)` `{` FunctionBody `}`
-```
-1. Assert: _name_ is not a Private Name.
-2. Return the result of defining a setter method on _object_ named _name_ with parameters _PropertySetParameterList_ and
-    whose body is _FunctionBody_ (steps TBD).
-
+- Object literals cannot have auto-accessors:
+    ```js
+    const obj = {
+      accessor x { get() { return 1; } }, // ok
+      accessor y { get; }, // syntax error
+    };
+    ```
 
 # Interaction with Decorators
 
@@ -481,6 +304,16 @@ class Widget {
 }
 ```
 
+This proposal also helps to provide consistency between decoration forms, which aids in reusability of decorators:
+
+| Element                             | `kind: "get"` | `kind: "set"` | `kind: "accessor"` |
+|:------------------------------------|:-------------:|:-------------:|:------------------:|
+| `get x() {}`                        | ✔️ | ⛔ | ⛔ |
+| `set x(v) {}`                       | ⛔ | ✔️ | ⛔ |
+| `accessor x;`                       | ⛔ | ⛔ | ✔️ |
+| `accessor x { get; set; }`          | ✔️ | ✔️ | ✔️ |
+| `accessor x { get() {} set(v) {} }` | ✔️ | ✔️ | ✔️ |
+
 ## Prior Art
 - C# ([1](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/using-properties), [2](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/auto-implemented-properties))
 
@@ -564,7 +397,7 @@ The following is a high-level list of tasks to progress through each stage of th
 [Prose]: #motivations
 [Examples]: #examples
 [API]: #api
-[Specification]: #todo
+[Specification]: https://tc39.es/proposal-grouped-and-auto-accessors
 [Transpiler]: #todo
 [Stage3ReviewerSignOff]: #todo
 [Stage3EditorSignOff]: #todo

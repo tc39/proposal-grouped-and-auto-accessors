@@ -14,7 +14,7 @@ contributors: Ron Buckton, Ecma International
 
 <emu-intro id="sec-intro">
   <h1>Introduction</h1>
-  <p>This proposal defines additional syntax for `accessor` properties in classes.</p>
+  <p>This proposal defines additional syntax for `accessor` properties in classes and object literals.</p>
   <p>See <a href="https://github.com/tc39/proposal-grouped-and-auto-accessors">the proposal repository</a> for background material and discussion.</p>
 </emu-intro>
 
