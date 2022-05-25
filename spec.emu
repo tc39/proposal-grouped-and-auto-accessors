@@ -934,7 +934,7 @@ contributors: Ron Buckton, Ecma International
         Runtime Semantics: AccessorGroupEvaluation (
           _homeObject_: unknown,
           _accessorGroup_: a ClassElementDefinition Record
-        ): a normal completion containing a ClassElementDefinition Record or an abrupt completion
+        ): either a normal completion containing a ClassElementDefinition Record or an abrupt completion
       </h1>
       <dl class="header">
       </dl>
