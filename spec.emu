@@ -268,7 +268,7 @@ contributors: Ron Buckton, Ecma International
         <h1>
           Runtime Semantics: PropertyDefinitionEvaluation (
             _object_: unknown,
-          )
+          ): either a normal completion containing ~unused~ or an abrupt completion
         </h1>
         <dl class="header">
         </dl>
@@ -336,7 +336,6 @@ contributors: Ron Buckton, Ecma International
         </emu-alg>
         </ins>
       </emu-clause>
-
     </emu-clause>
   </emu-clause>
 </emu-clause>
@@ -383,7 +382,6 @@ contributors: Ron Buckton, Ecma International
         1. Return ~unused~.
       </emu-alg>
     </emu-clause>
-
   </emu-clause>
 
   <emu-clause id="sec-class-definitions">
@@ -491,10 +489,7 @@ contributors: Ron Buckton, Ecma International
       <h1>Static Semantics: Early Errors</h1>
 
       <ins class="block">
-      <emu-grammar>
-        FieldDefinition :
-          `accessor` ClassElementName AccessorGroup Initializer `;`
-      </emu-grammar>
+      <emu-grammar>FieldDefinition : `accessor` ClassElementName AccessorGroup Initializer `;`</emu-grammar>
       <ul>
         <li>It is a Syntax Error if ContainsNonIdentifierName of |ClassElementName| is *true* and ContainsAccessorGroupPrivateMethod of |AccessorGroup|  is *true*.</li>
         <li>It is a Syntax Error if ContainsAccessorGroupMethodDefinition of |AccessorGroup| *true*.</li>
@@ -502,18 +497,12 @@ contributors: Ron Buckton, Ecma International
         <li>It is a Syntax Error if |Initializer| Contains |SuperCall| is *true*.</li>
       </ul>
 
-      <emu-grammar>
-        FieldDefinition :
-          `accessor` ClassElementName AccessorGroup
-      </emu-grammar>
+      <emu-grammar>FieldDefinition : `accessor` ClassElementName AccessorGroup</emu-grammar>
       <ul>
         <li>It is a Syntax Error if ContainsNonIdentifierName of |ClassElementName| is *true* and ContainsAccessorGroupPrivateMethod of |AccessorGroup| is *true*.</li>
       </ul>
 
-      <emu-grammar>
-        AccessorGroup :
-          `{` AccessorGroupElement AccessorGroupElement `}`
-      </emu-grammar>
+      <emu-grammar>AccessorGroup : `{` AccessorGroupElement AccessorGroupElement `}`</emu-grammar>
       <ul>
         <li>It is a Syntax Error if ContainsAccessorGroupGetMethod of the first |AccessorGroupElement| is *true* and ContainsAccessorGroupGetMethod of the second |AccessorGroupElement| is *true*.</li>
         <li>It is a Syntax Error if ContainsAccessorGroupSetMethod of the first |AccessorGroupElement| is *true* and ContainsAccessorGroupSetMethod of the second |AccessorGroupElement| is *true*.</li>
@@ -524,7 +513,7 @@ contributors: Ron Buckton, Ecma International
     </emu-clause>
 
     <emu-clause id="sec-static-semantics-privateboundidentifiers" type="sdo">
-      <h1>Static Semantics: PrivateBoundIdentifiers</h1>
+      <h1>Static Semantics: PrivateBoundIdentifiers ( ): a List of Strings</h1>
       <dl class="header">
       </dl>
       <emu-grammar>
@@ -619,21 +608,27 @@ contributors: Ron Buckton, Ecma International
 
     <ins class="block">
     <emu-clause id="sec-static-semantics-containsnonidentifiername" type="sdo">
-      <h1>Static Semantics: ContainsNonIdentifierName</h1>
+      <h1>Static Semantics: ContainsNonIdentifierName ( ): a Boolean</h1>
       <dl class="header">
       </dl>
       <emu-grammar>
-        ClassElementName : PrivateIdentifier
-        PropertyName : ComputedPropertyName
-        LiteralPropertyName : StringLiteral
-        LiteralPropertyName : NumericLiteral
+        ClassElementName :
+          PrivateIdentifier
+
+        PropertyName :
+          ComputedPropertyName
+
+        LiteralPropertyName :
+          StringLiteral
+
+        LiteralPropertyName :
+          NumericLiteral
       </emu-grammar>
       <emu-alg>
         1. Return *true*.
       </emu-alg>
-      <emu-grammar>
-        LiteralPropertyName: IdentifierName
-      </emu-grammar>
+
+      <emu-grammar>LiteralPropertyName: IdentifierName</emu-grammar>
       <emu-alg>
         1. Return *false*.
       </emu-alg>
@@ -643,7 +638,7 @@ contributors: Ron Buckton, Ecma International
     </emu-clause>
 
     <emu-clause id="sec-static-semantics-containsaccessorgroupmethoddefinition" type="sdo">
-      <h1>Static Semantics: ContainsAccessorGroupMethodDefinition</h1>
+      <h1>Static Semantics: ContainsAccessorGroupMethodDefinition ( ): a Boolean</h1>
       <dl class="header">
       </dl>
       <emu-grammar>
@@ -692,7 +687,7 @@ contributors: Ron Buckton, Ecma International
     </emu-clause>
 
     <emu-clause id="sec-static-semantics-containsaccessorgroupgetmethod" type="sdo">
-      <h1>Static Semantics: ContainsAccessorGroupGetMethod</h1>
+      <h1>Static Semantics: ContainsAccessorGroupGetMethod ( ): a Boolean</h1>
       <dl class="header">
       </dl>
       <emu-grammar>
@@ -721,7 +716,7 @@ contributors: Ron Buckton, Ecma International
     </emu-clause>
 
     <emu-clause id="sec-static-semantics-containsaccessorgroupsetmethod" type="sdo">
-      <h1>Static Semantics: ContainsAccessorGroupSetMethod</h1>
+      <h1>Static Semantics: ContainsAccessorGroupSetMethod ( ): a Boolean</h1>
       <dl class="header">
       </dl>
       <emu-grammar>
@@ -750,7 +745,7 @@ contributors: Ron Buckton, Ecma International
     </emu-clause>
 
     <emu-clause id="sec-static-semantics-containsaccessorgroupprivatemethod" type="sdo">
-      <h1>Static Semantics: ContainsAccessorGroupPrivateMethod</h1>
+      <h1>Static Semantics: ContainsAccessorGroupPrivateMethod ( ): a Boolean</h1>
       <dl class="header">
       </dl>
       <emu-grammar>
@@ -799,7 +794,7 @@ contributors: Ron Buckton, Ecma International
     </emu-clause>
 
     <emu-clause id="sec-static-semantics-containsaccessorgroupmethodstub" type="sdo">
-      <h1>Static Semantics: ContainsAccessorGroupMethodStub</h1>
+      <h1>Static Semantics: ContainsAccessorGroupMethodStub ( ): a Boolean</h1>
       <dl class="header">
       </dl>
       <emu-grammar>
@@ -828,7 +823,7 @@ contributors: Ron Buckton, Ecma International
     </emu-clause>
 
     <emu-clause id="sec-static-semantics-isautoaccessor" type="sdo">
-      <h1>Static Semantics: IsAutoAccessor</h1>
+      <h1>Static Semantics: IsAutoAccessor ( ): a Boolean</h1>
       <dl class="header">
       </dl>
       <emu-grammar>
@@ -858,7 +853,7 @@ contributors: Ron Buckton, Ecma International
       <h1>
         Runtime Semantics: ClassFieldDefinitionEvaluation (
           _homeObject_: unknown,
-        )
+        ): either a normal completion containing a ClassElementDefinition Record or an abrupt completion
       </h1>
       <dl class="header">
       </dl>
@@ -939,7 +934,7 @@ contributors: Ron Buckton, Ecma International
         Runtime Semantics: AccessorGroupEvaluation (
           _homeObject_: unknown,
           _accessorGroup_: a ClassElementDefinition Record
-        )
+        ): a normal completion containing a ClassElementDefinition Record or an abrupt completion
       </h1>
       <dl class="header">
       </dl>
@@ -965,7 +960,7 @@ contributors: Ron Buckton, Ecma International
         AccessorGroup : `{` AccessorGroupElement `}`
       </emu-grammar>
       <emu-alg>
-        1. Return AccessorGroupEvaluation of |AccessorGroupElement| with arguments _homeObject_ and _accessorGroup_.
+        1. Return ? AccessorGroupEvaluation of |AccessorGroupElement| with arguments _homeObject_ and _accessorGroup_.
       </emu-alg>
 
       <emu-grammar>
@@ -991,7 +986,7 @@ contributors: Ron Buckton, Ecma International
         AccessorGroupElement : AccessorGroupGetMethodDefinition
       </emu-grammar>
       <emu-alg>
-        1. Return AccessorGroupEvaluation of |AccessorGroupGetMethodDefinition| with arguments _homeObject_ and _accessorGroup_.
+        1. Return ? AccessorGroupEvaluation of |AccessorGroupGetMethodDefinition| with arguments _homeObject_ and _accessorGroup_.
       </emu-alg>
 
       <emu-grammar>
