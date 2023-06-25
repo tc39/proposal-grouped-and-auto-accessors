@@ -1,7 +1,7 @@
 # Grouped Accessors and Auto-Accessors for ECMAScript
 
 This introduces an investigation into new syntax for _grouped accessors_ to classes and object literals and _auto-accessors_ to classes. 
-A _grouped accessor_ is a single declaration that contains either or both both of the `get` and `set` methods for an accessor. 
+A _grouped accessor_ is a single declaration that contains either or both of the `get` and `set` methods for an accessor. 
 An _auto-accessor_ is a simplified variant of a _grouped accessor_ that elides the bodies of the `get` and `set` methods and
 introduces a private backing field used by both the getter and setter.
 
